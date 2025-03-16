@@ -1,16 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional
 import os
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from dotenv import load_dotenv
-
-# Load environment variables from .env file if present
-load_dotenv()
 
 app = FastAPI(title="Code Generation API", description="An API for generating code with LLM")
 
@@ -23,10 +18,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Environment validation
+# Environment setup
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
-    print("Error: GROQ_API_KEY environment variable not set. Many API endpoints will fail.")
+    print("Warning: GROQ_API_KEY environment variable not set")
+
+def chat_init():
+    return ChatGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0.7,
+        max_tokens=32768,
+        api_key=GROQ_API_KEY,
+        max_retries=2,
+    )
 
 # Models for request/response
 class PromptRequest(BaseModel):
@@ -43,41 +47,13 @@ class CodeRequest(BaseModel):
 class ApiResponse(BaseModel):
     success: bool
     message: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    data: Optional[dict] = None
 
-# Dependency to get initialized LLM client
-def get_llm_client():
-    if not GROQ_API_KEY:
-        raise HTTPException(
-            status_code=500,
-            detail="API key not configured. Please set the GROQ_API_KEY environment variable."
-        )
-    
-    try:
-        return ChatGroq(
-            model="llama-3.3-70b-versatile",
-            temperature=0.7,
-            max_tokens=32768,
-            api_key=GROQ_API_KEY,
-            max_retries=2,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to initialize LLM client: {str(e)}"
-        )
-
-@app.get("/api/health")
-async def health_check():
-    """Check if the API is running and if the LLM client is properly configured."""
-    api_key_status = "configured" if GROQ_API_KEY else "missing"
-    return {
-        "status": "healthy",
-        "api_key_status": api_key_status
-    }
+# Initialize chain once for reuse
+chain = chat_init()
 
 @app.post("/api/generate-plan", response_model=ApiResponse)
-async def api_generate_plan(request: PromptRequest, llm_client: ChatGroq = Depends(get_llm_client)):
+async def api_generate_plan(request: PromptRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", """You are an expert code planner (Planskill). Your task is to break down the request into a step-by-step implementation plan.
@@ -86,7 +62,7 @@ async def api_generate_plan(request: PromptRequest, llm_client: ChatGroq = Depen
         ])
         
         messages = prompt_template.format_messages(original_prompt=request.prompt)
-        response = llm_client.invoke(messages)
+        response = chain.invoke(messages)
         
         return {
             "success": True,
@@ -99,7 +75,7 @@ async def api_generate_plan(request: PromptRequest, llm_client: ChatGroq = Depen
         }
 
 @app.post("/api/generate-code", response_model=ApiResponse)
-async def api_generate_code(request: PlanRequest, llm_client: ChatGroq = Depends(get_llm_client)):
+async def api_generate_code(request: PlanRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", """You are an expert code builder (Codeskill). Your job is to write efficient, structured, and well-documented code that follows the given plan."""),
@@ -107,7 +83,7 @@ async def api_generate_code(request: PlanRequest, llm_client: ChatGroq = Depends
         ])
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, plan=request.plan)
-        response = llm_client.invoke(messages)
+        response = chain.invoke(messages)
         
         return {
             "success": True,
@@ -120,7 +96,7 @@ async def api_generate_code(request: PlanRequest, llm_client: ChatGroq = Depends
         }
 
 @app.post("/api/debug-code", response_model=ApiResponse)
-async def api_debug_code(request: CodeRequest, llm_client: ChatGroq = Depends(get_llm_client)):
+async def api_debug_code(request: CodeRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", """You are an expert code debugger (Debugskill). Your job is to find and fix errors in the given code."""),
@@ -128,7 +104,7 @@ async def api_debug_code(request: CodeRequest, llm_client: ChatGroq = Depends(ge
         ])
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, code=request.code)
-        response = llm_client.invoke(messages)
+        response = chain.invoke(messages)
         
         return {
             "success": True,
@@ -141,7 +117,7 @@ async def api_debug_code(request: CodeRequest, llm_client: ChatGroq = Depends(ge
         }
 
 @app.post("/api/generate-debug-plan", response_model=ApiResponse)
-async def api_generate_debug_plan(request: CodeRequest, llm_client: ChatGroq = Depends(get_llm_client)):
+async def api_generate_debug_plan(request: CodeRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", """You are an expert code debugger. Your task is to generate a structured plan to debug the given code."""),
@@ -149,7 +125,7 @@ async def api_generate_debug_plan(request: CodeRequest, llm_client: ChatGroq = D
         ])
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, code=request.code)
-        response = llm_client.invoke(messages)
+        response = chain.invoke(messages)
         
         return {
             "success": True,
@@ -162,7 +138,7 @@ async def api_generate_debug_plan(request: CodeRequest, llm_client: ChatGroq = D
         }
 
 @app.post("/api/parent-llm", response_model=ApiResponse)
-async def api_parent_llm(request: CodeRequest, llm_client: ChatGroq = Depends(get_llm_client)):
+async def api_parent_llm(request: CodeRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", """You are the Parent LLM overseeing the entire code-building process. Your job is to validate whether the output meets the original request and plan."""),
@@ -170,7 +146,7 @@ async def api_parent_llm(request: CodeRequest, llm_client: ChatGroq = Depends(ge
         ])
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, json_response=request.code)
-        response = llm_client.invoke(messages)
+        response = chain.invoke(messages)
         
         return {
             "success": True,
@@ -184,32 +160,32 @@ async def api_parent_llm(request: CodeRequest, llm_client: ChatGroq = Depends(ge
 
 # Full pipeline endpoint
 @app.post("/api/generate-full", response_model=ApiResponse)
-async def api_generate_full(request: PromptRequest, llm_client: ChatGroq = Depends(get_llm_client)):
+async def api_generate_full(request: PromptRequest):
     try:
         # Step 1: Generate plan
-        plan_response = await api_generate_plan(request, llm_client)
+        plan_response = await api_generate_plan(request)
         if not plan_response["success"]:
             return plan_response
         plan = plan_response["data"]["plan"]
         
         # Step 2: Generate code
         code_request = PlanRequest(prompt=request.prompt, plan=plan)
-        code_response = await api_generate_code(code_request, llm_client)
+        code_response = await api_generate_code(code_request)
         if not code_response["success"]:
             return code_response
         code = code_response["data"]["code"]
         
         # Step 3: Debug code
         debug_request = CodeRequest(prompt=request.prompt, code=code)
-        debug_response = await api_debug_code(debug_request, llm_client)
+        debug_response = await api_debug_code(debug_request)
         debug_output = debug_response["data"]["debug_output"] if debug_response["success"] else None
         
         # Step 4: Generate debug plan
-        debug_plan_response = await api_generate_debug_plan(debug_request, llm_client)
+        debug_plan_response = await api_generate_debug_plan(debug_request)
         debug_plan = debug_plan_response["data"]["debug_plan"] if debug_plan_response["success"] else None
         
         # Step 5: Final validation
-        validation_response = await api_parent_llm(debug_request, llm_client)
+        validation_response = await api_parent_llm(debug_request)
         validation = validation_response["data"]["validation"] if validation_response["success"] else None
         
         return {
@@ -233,4 +209,4 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

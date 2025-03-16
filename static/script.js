@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const codeOutput = document.getElementById('code-output');
     const debugOutput = document.getElementById('debug-output');
     const debugPlanOutput = document.getElementById('debug-plan-output');
+    const completeCodeOutput = document.getElementById('complete-code-output');
     const validationOutput = document.getElementById('validation-output');
     
     // Tab functionality with animation
@@ -90,6 +91,78 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
     
+    // Process code to extract file structure
+    function processCompleteCode(codeString) {
+        // Look for common file patterns in the code
+        const filePatterns = [
+            {regex: /```(?:html|)\s*(?:<.*?>)?\s*<!DOCTYPE html>/i, language: 'html', filename: 'index.html'},
+            {regex: /```(?:css|)\s*(?:<.*?>)?\s*(?:\/\*.*?\*\/\s*)?(?:body|html|\*|:root)/i, language: 'css', filename: 'styles.css'},
+            {regex: /```(?:js|javascript)\s*(?:<.*?>)?\s*(?:\/\/.*?\n|\/\*.*?\*\/\s*)?(?:function|const|let|var|import|document)/i, language: 'javascript', filename: 'script.js'},
+            {regex: /```(?:py|python)\s*(?:<.*?>)?\s*(?:#.*?\n|"""|''')?(?:import|from|def|class)/i, language: 'python', filename: 'app.py'},
+            {regex: /```(?:java)\s*(?:<.*?>)?\s*(?:\/\/.*?\n|\/\*.*?\*\/\s*)?(?:public class|class|import|package)/i, language: 'java', filename: 'Main.java'}
+        ];
+        
+        // Split by code blocks
+        const codeBlocks = codeString.split(/```(?:\w*)/);
+        let formattedCode = '';
+        let inCodeBlock = false;
+        let currentLanguage = '';
+        
+        // Process the code to identify files
+        codeBlocks.forEach((block, index) => {
+            if (index === 0) return; // Skip first split which is usually introduction text
+            
+            if (!inCodeBlock) {
+                // We're at the start of a code block, try to identify the file
+                let fileIdentified = false;
+                
+                for (const pattern of filePatterns) {
+                    if (pattern.regex.test('```' + block)) {
+                        formattedCode += `\n### File: ${pattern.filename}\n\n\`\`\`${pattern.language}\n`;
+                        currentLanguage = pattern.language;
+                        fileIdentified = true;
+                        break;
+                    }
+                }
+                
+                if (!fileIdentified) {
+                    // If we can't identify, use a generic filename based on the language
+                    const langMatch = block.match(/^(\w+)/);
+                    currentLanguage = langMatch ? langMatch[1] : '';
+                    const filename = currentLanguage ? `file.${currentLanguage}` : 'file.txt';
+                    formattedCode += `\n### File: ${filename}\n\n\`\`\`${currentLanguage}\n`;
+                }
+                
+                // Add the code content
+                const codeContent = block.replace(/^(\w+)/, '').trim();
+                formattedCode += codeContent + '\n```\n';
+                
+                inCodeBlock = true;
+            } else {
+                // This should be non-code text between blocks
+                inCodeBlock = false;
+                
+                // Check if this block contains another code block
+                for (const pattern of filePatterns) {
+                    if (pattern.regex.test('```' + block)) {
+                        formattedCode += `\n### File: ${pattern.filename}\n\n\`\`\`${pattern.language}\n`;
+                        const codeContent = block.replace(/^(\w+)/, '').trim();
+                        formattedCode += codeContent + '\n```\n';
+                        inCodeBlock = true;
+                        break;
+                    }
+                }
+                
+                if (!inCodeBlock && block.trim()) {
+                    // This is explanatory text
+                    formattedCode += '\n' + block.trim() + '\n';
+                }
+            }
+        });
+        
+        return formattedCode || codeString;
+    }
+    
     // Generate code
     generateBtn.addEventListener('click', async () => {
         const prompt = promptInput.value.trim();
@@ -122,6 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 debugPlanOutput.innerHTML = markdownToHtml(data.data.debug_plan);
                 validationOutput.innerHTML = markdownToHtml(data.data.validation);
                 
+                // Process and display complete code with file names
+                completeCodeOutput.innerHTML = markdownToHtml(processCompleteCode(data.data.code));
+                
                 // Highlight code
                 hljs.highlightAll();
                 
@@ -151,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 codeOutput.textContent = '';
                 debugOutput.innerHTML = '';
                 debugPlanOutput.innerHTML = '';
+                completeCodeOutput.innerHTML = '';
                 validationOutput.innerHTML = '';
                 resultsElement.classList.add('hidden');
                 resultsElement.style.opacity = '1';
@@ -174,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
             .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
             .replace(/\n/g, '<br>');
     }
     
