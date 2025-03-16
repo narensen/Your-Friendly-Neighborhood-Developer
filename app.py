@@ -25,7 +25,7 @@ if not GROQ_API_KEY:
 
 def chat_init():
     return ChatGroq(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.2-90b-vision-preview",
         temperature=0.7,
         max_tokens=32768,
         api_key=GROQ_API_KEY,
