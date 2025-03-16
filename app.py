@@ -27,7 +27,7 @@ def chat_init():
     return ChatGroq(
         model="llama-3.2-90b-vision-preview",
         temperature=0.7,
-        max_tokens=32768,
+        max_tokens=8192,
         api_key=GROQ_API_KEY,
         max_retries=2,
     )
