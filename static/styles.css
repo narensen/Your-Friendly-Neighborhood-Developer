@@ -1,14 +1,14 @@
 :root {
-    --primary-color: #6366f1;
-    --secondary-color: #4f46e5;
-    --text-color: #1f2937;
-    --light-text: #6b7280;
-    --background-color: #f9fafb;
+    --primary-color: #000000;
+    --secondary-color: #333333;
+    --text-color: #000000;
+    --light-text: #555555;
+    --background-color: #ffffff;
     --card-bg: #ffffff;
-    --border-color: #e5e7eb;
-    --success-color: #10b981;
-    --error-color: #ef4444;
-    --code-bg: #282c34;
+    --border-color: #dddddd;
+    --success-color: #000000;
+    --error-color: #000000;
+    --code-bg: #000000;
 }
 
 * {
@@ -32,7 +32,7 @@ body {
 
 header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2rem;    
 }
 
 header h1 {
@@ -135,7 +135,7 @@ textarea {
 }
 
 .secondary-btn:hover {
-    background-color: rgba(99, 102, 241, 0.1);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .output-section {
@@ -156,9 +156,9 @@ textarea {
 .spinner {
     width: 50px;
     height: 50px;
-    border: 5px solid rgba(99, 102, 241, 0.2);
+    border: 5px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
-    border-top-color: var(--primary-color);
+    border-top-color: #000000;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
 }
@@ -208,7 +208,7 @@ textarea {
 
 .code-output {
     background-color: var(--code-bg);
-    color: #abb2bf;
+    color: #ffffff;
     padding: 1rem;
     border-radius: 4px;
     overflow-x: auto;
