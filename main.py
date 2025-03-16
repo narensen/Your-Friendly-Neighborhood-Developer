@@ -6,6 +6,7 @@ from typing import Optional
 import os
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
+from fastapi.responses import JSONResponse
 
 app = FastAPI(title="Code Generation API", description="An API for generating code with LLM")
 
@@ -24,6 +25,9 @@ if not GROQ_API_KEY:
     print("Warning: GROQ_API_KEY environment variable not set")
 
 def chat_init():
+    if not GROQ_API_KEY:
+        raise ValueError("Missing GROQ API Key. Set GROQ_API_KEY in environment variables.")
+    
     return ChatGroq(
         model="llama-3.2-90b-vision-preview",
         temperature=0.7,
@@ -63,16 +67,21 @@ async def api_generate_plan(request: PromptRequest):
         
         messages = prompt_template.format_messages(original_prompt=request.prompt)
         response = chain.invoke(messages)
+
+        if not response or not hasattr(response, "content"):
+            raise HTTPException(status_code=500, detail="Error: No response received from LLM.")
         
-        return {
-            "success": True,
-            "data": {"plan": response.content if response else "No response received."}
-        }
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {"plan": response.content if response else "No response received."}
+            }
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Error generating plan: {str(e)}"
-        }
+        return JSONResponse(
+            content={"success": False, "message": f"Error generating plan: {str(e)}"},
+            status_code=500
+        )
 
 @app.post("/api/generate-code", response_model=ApiResponse)
 async def api_generate_code(request: PlanRequest):
@@ -84,16 +93,21 @@ async def api_generate_code(request: PlanRequest):
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, plan=request.plan)
         response = chain.invoke(messages)
+
+        if not response or not hasattr(response, "content"):
+            raise HTTPException(status_code=500, detail="Error: No response received from LLM.")
         
-        return {
-            "success": True,
-            "data": {"code": response.content if response else "No response received."}
-        }
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {"code": response.content if response else "No response received."}
+            }
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Error generating code: {str(e)}"
-        }
+        return JSONResponse(
+            content={"success": False, "message": f"Error generating code: {str(e)}"},
+            status_code=500
+        )
 
 @app.post("/api/debug-code", response_model=ApiResponse)
 async def api_debug_code(request: CodeRequest):
@@ -105,16 +119,21 @@ async def api_debug_code(request: CodeRequest):
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, code=request.code)
         response = chain.invoke(messages)
+
+        if not response or not hasattr(response, "content"):
+            raise HTTPException(status_code=500, detail="Error: No response received from LLM.")
         
-        return {
-            "success": True,
-            "data": {"debug_output": response.content if response else "No response received."}
-        }
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {"debug_output": response.content if response else "No response received."}
+            }
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Error debugging code: {str(e)}"
-        }
+        return JSONResponse(
+            content={"success": False, "message": f"Error debugging code: {str(e)}"},
+            status_code=500
+        )
 
 @app.post("/api/generate-debug-plan", response_model=ApiResponse)
 async def api_generate_debug_plan(request: CodeRequest):
@@ -126,16 +145,21 @@ async def api_generate_debug_plan(request: CodeRequest):
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, code=request.code)
         response = chain.invoke(messages)
+
+        if not response or not hasattr(response, "content"):
+            raise HTTPException(status_code=500, detail="Error: No response received from LLM.")
         
-        return {
-            "success": True,
-            "data": {"debug_plan": response.content if response else "No response received."}
-        }
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {"debug_plan": response.content if response else "No response received."}
+            }
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Error generating debug plan: {str(e)}"
-        }
+        return JSONResponse(
+            content={"success": False, "message": f"Error generating debug plan: {str(e)}"},
+            status_code=500
+        )
 
 @app.post("/api/parent-llm", response_model=ApiResponse)
 async def api_parent_llm(request: CodeRequest):
@@ -147,16 +171,21 @@ async def api_parent_llm(request: CodeRequest):
         
         messages = prompt_template.format_messages(original_prompt=request.prompt, json_response=request.code)
         response = chain.invoke(messages)
+
+        if not response or not hasattr(response, "content"):
+            raise HTTPException(status_code=500, detail="Error: No response received from LLM.")
         
-        return {
-            "success": True,
-            "data": {"validation": response.content if response else "No response received."}
-        }
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {"validation": response.content if response else "No response received."}
+            }
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Error validating code: {str(e)}"
-        }
+        return JSONResponse(
+            content={"success": False, "message": f"Error validating code: {str(e)}"},
+            status_code=500
+        )
 
 # Full pipeline endpoint
 @app.post("/api/generate-full", response_model=ApiResponse)
@@ -164,45 +193,54 @@ async def api_generate_full(request: PromptRequest):
     try:
         # Step 1: Generate plan
         plan_response = await api_generate_plan(request)
-        if not plan_response["success"]:
+        plan_response_json = await plan_response.json()
+        if not plan_response_json.get("success", False):
             return plan_response
-        plan = plan_response["data"]["plan"]
+        
+        plan = plan_response_json["data"]["plan"]
         
         # Step 2: Generate code
         code_request = PlanRequest(prompt=request.prompt, plan=plan)
         code_response = await api_generate_code(code_request)
-        if not code_response["success"]:
+        code_response_json = await code_response.json()
+        if not code_response_json.get("success", False):
             return code_response
-        code = code_response["data"]["code"]
+        
+        code = code_response_json["data"]["code"]
         
         # Step 3: Debug code
         debug_request = CodeRequest(prompt=request.prompt, code=code)
         debug_response = await api_debug_code(debug_request)
-        debug_output = debug_response["data"]["debug_output"] if debug_response["success"] else None
+        debug_response_json = await debug_response.json()
+        debug_output = debug_response_json["data"]["debug_output"] if debug_response_json.get("success") else None
         
         # Step 4: Generate debug plan
         debug_plan_response = await api_generate_debug_plan(debug_request)
-        debug_plan = debug_plan_response["data"]["debug_plan"] if debug_plan_response["success"] else None
+        debug_plan_response_json = await debug_plan_response.json()
+        debug_plan = debug_plan_response_json["data"]["debug_plan"] if debug_plan_response_json.get("success") else None
         
         # Step 5: Final validation
         validation_response = await api_parent_llm(debug_request)
-        validation = validation_response["data"]["validation"] if validation_response["success"] else None
+        validation_response_json = await validation_response.json()
+        validation = validation_response_json["data"]["validation"] if validation_response_json.get("success") else None
         
-        return {
-            "success": True,
-            "data": {
-                "plan": plan,
-                "code": code,
-                "debug_output": debug_output,
-                "debug_plan": debug_plan,
-                "validation": validation
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {
+                    "plan": plan,
+                    "code": code,
+                    "debug_output": debug_output,
+                    "debug_plan": debug_plan,
+                    "validation": validation
+                }
             }
-        }
+        )
     except Exception as e:
-        return {
-            "success": False,   
-            "message": f"Error in full generation pipeline: {str(e)}"
-        }
+        return JSONResponse(
+            content={"success": False, "message": f"Error in full generation pipeline: {str(e)}"},
+            status_code=500
+        )
 
 # Mount static files for frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
