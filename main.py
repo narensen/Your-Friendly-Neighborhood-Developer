@@ -4,16 +4,15 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 import os
-import json
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
 app = FastAPI(title="Code Generation API", description="An API for generating code with LLM")
 
-# CORS setup
+# CORS setup to allow frontend to call our API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, replace with specific origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,93 +44,59 @@ class CodeRequest(BaseModel):
     prompt: str
     code: str
 
-class ApiResponse(BaseModel):
-    success: bool
-    message: Optional[str] = None
-    data: Optional[dict] = None
-
-# Initialize chain
+# Initialize chain once for reuse
 chain = chat_init()
 
-def parse_response(response_text: str):
-    """Attempt to parse JSON response, otherwise return plain text."""
-    try:
-        return json.loads(response_text)
-    except json.JSONDecodeError:
-        return {"content": response_text}
-
-@app.post("/api/generate-plan", response_model=ApiResponse)
+@app.post("/api/generate-plan")
 async def api_generate_plan(request: PromptRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
-            ("system", "You are an expert code planner. Provide a structured step-by-step plan."),
+            ("system", """You are an expert code planner (Planskill). Your task is to break down the request into a step-by-step implementation plan.
+            **Always return output as JSON, nothing else.**"""),
             ("human", "The user wants: {original_prompt}"),
         ])
+        
         messages = prompt_template.format_messages(original_prompt=request.prompt)
         response = chain.invoke(messages)
-        parsed_response = parse_response(response.content if response else "No response received.")
-        return {"success": True, "data": parsed_response}
+        
+        return {"success": True, "data": response.content if response else "No response received."}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"success": False, "message": f"Error generating plan: {str(e)}"}
 
-@app.post("/api/generate-code", response_model=ApiResponse)
+@app.post("/api/generate-code")
 async def api_generate_code(request: PlanRequest):
     try:
         prompt_template = ChatPromptTemplate.from_messages([
-            ("system", "You are an expert code builder. Generate well-structured and documented code."),
+            ("system", """You are an expert code builder (Codeskill). Your job is to write efficient, structured, and well-documented code that follows the given plan."""),
             ("human", "The user wants: {original_prompt}\nHere is the plan:\n{plan}"),
         ])
+        
         messages = prompt_template.format_messages(original_prompt=request.prompt, plan=request.plan)
         response = chain.invoke(messages)
-        parsed_response = parse_response(response.content if response else "No response received.")
-        return {"success": True, "data": parsed_response}
+        
+        return {"success": True, "data": response.content if response else "No response received."}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"success": False, "message": f"Error generating code: {str(e)}"}
 
-@app.post("/api/debug-code", response_model=ApiResponse)
-async def api_debug_code(request: CodeRequest):
-    try:
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", "You are an expert code debugger. Identify and fix issues."),
-            ("human", "The user wants: {original_prompt}\nHere is the generated code:\n{code}"),
-        ])
-        messages = prompt_template.format_messages(original_prompt=request.prompt, code=request.code)
-        response = chain.invoke(messages)
-        parsed_response = parse_response(response.content if response else "No response received.")
-        return {"success": True, "data": parsed_response}
-    except Exception as e:
-        return {"success": False, "message": str(e)}
-
-@app.post("/api/generate-full", response_model=ApiResponse)
+@app.post("/api/generate-full")
 async def api_generate_full(request: PromptRequest):
     try:
         plan_response = await api_generate_plan(request)
         if not plan_response["success"]:
             return plan_response
-        plan = plan_response["data"].get("content", "")
+        plan = plan_response["data"]
         
         code_request = PlanRequest(prompt=request.prompt, plan=plan)
         code_response = await api_generate_code(code_request)
         if not code_response["success"]:
             return code_response
-        code = code_response["data"].get("content", "")
+        code = code_response["data"]
         
-        debug_request = CodeRequest(prompt=request.prompt, code=code)
-        debug_response = await api_debug_code(debug_request)
-        debug_output = debug_response["data"].get("content", "")
-        
-        return {
-            "success": True,
-            "data": {
-                "plan": plan,
-                "code": code,
-                "debug_output": debug_output,
-            }
-        }
+        return {"success": True, "data": {"plan": plan, "code": code}}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"success": False, "message": f"Error in full generation pipeline: {str(e)}"}
 
-# Mount static files
+# Mount static files for frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
