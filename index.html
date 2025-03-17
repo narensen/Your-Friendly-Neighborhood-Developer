@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot Interface</title>
+    <style>
+        :root {
+            --primary-color: #6c63ff;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --light-text: #777;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-right: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 40px;
+            margin-right: 10px;
+        }
+
+        .logo h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .history {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .history-item:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .history-item.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .new-chat {
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .new-chat:hover {
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .chat-header .model-selector {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header select {
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            margin-left: 10px;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .message.user .message-content {
+            background-color: var(--primary-color);
+            color: white;
+            border-top-right-radius: 0;
+        }
+
+        .message.assistant .message-content {
+            background-color: var(--secondary-color);
+            border-top-left-radius: 0;
+        }
+
+        .message-meta {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--light-text);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--light-text);
+        }
+
+        .message-actions button:hover {
+            color: var(--primary-color);
+        }
+
+        .code-block {
+            background-color: #f7f7f7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .chat-input {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+        }
+
+        .chat-input textarea {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            resize: none;
+            font-size: 16px;
+            max-height: 120px;
+            min-height: 50px;
+        }
+
+        .chat-input button {
+            padding: 0 20px;
+            margin-left: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            opacity: 0.9;
+        }
+
+        .chat-input button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            color: var(--light-text);
+        }
+
+        .loading-dots {
+            display: flex;
+            margin-left: 10px;
+        }
+
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--light-text);
+            margin: 0 3px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(0.7);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .settings-panel {
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .settings-panel h3 {
+            margin-bottom: 15px;
+        }
+
+        .settings-item {
+            margin-bottom: 15px;
+        }
+
+        .settings-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .settings-item input[type="range"] {
+            width: 100%;
+        }
+
+        .settings-item .range-value {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+                height: auto;
+                max-height: 200px;
+            }
+
+            .chat-container {
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <h2>AI Builder Chatbot</h2>
+            </div>
+            <div class="history" id="chat-history">
+                <!-- Chat history will be dynamically added here -->
+            </div>
+            <button class="new-chat" id="new-chat-btn">New Chat</button>
+            <div class="settings-panel">
+                <h3>Settings</h3>
+                <div class="settings-item">
+                    <label for="temperature">Temperature</label>
+                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                    <div class="range-value">
+                        <span>0</span>
+                        <span id="temp-value">0.7</span>
+                        <span>1</span>
+                    </div>
+                </div>
+                <div class="settings-item">
+                    <label for="max-tokens">Max Tokens</label>
+                    <input type="range" id="max-tokens" min="1000" max="32768" step="1000" value="32768">
+                    <div class="range-value">
+                        <span>1000</span>
+                        <span id="tokens-value">32768</span>
+                        <span>32768</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Chat Session</h2>
+                <div class="model-selector">
+                    <span>Model:</span>
+                    <select id="model-selector">
+                        <option value="llama-3.3-70b-versatile" selected>Llama 3.3 70B</option>
+                        <option value="llama-3.1-70b-versatile">Llama 3.1 70B</option>
+                        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                        <option value="gemma-7b-it">Gemma 7B</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome message -->
+                <div class="message assistant">
+                    <div class="message-content">
+                        Welcome to AI Builder! I can help you create code based on your requirements. What would you like to build?
+                    </div>
+                    <div class="message-meta">
+                        <span>Just now</span>
+                        <div class="message-actions">
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <textarea id="user-input" placeholder="Type your message here..." rows="1"></textarea>
+                <button id="send-btn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-btn');
+            const newChatButton = document.getElementById('new-chat-btn');
+            const chatHistory = document.getElementById('chat-history');
+            const modelSelector = document.getElementById('model-selector');
+            const temperatureSlider = document.getElementById('temperature');
+            const maxTokensSlider = document.getElementById('max-tokens');
+            const tempValue = document.getElementById('temp-value');
+            const tokensValue = document.getElementById('tokens-value');
+
+            // Chat state
+            let chats = [];
+            let currentChatId = null;
+            let isProcessing = false;
+
+            // Initialize
+            createNewChat();
+
+            // Event listeners
+            userInput.addEventListener('input', function() {
+                sendButton.disabled = userInput.value.trim() === '';
+                adjustTextareaHeight();
+            });
+
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!sendButton.disabled) {
+                        sendMessage();
+                    }
+                }
+            });
+
+            sendButton.addEventListener('click', sendMessage);
+            newChatButton.addEventListener('click', createNewChat);
+
+            temperatureSlider.addEventListener('input', function() {
+                tempValue.textContent = this.value;
+            });
+
+            maxTokensSlider.addEventListener('input', function() {
+                tokensValue.textContent = this.value;
+            });
+
+            // Functions
+            function createNewChat() {
+                const chatId = Date.now().toString();
+                const chat = {
+                    id: chatId,
+                    title: 'New Chat',
+                    messages: []
+                };
+                
+                chats.push(chat);
+                currentChatId = chatId;
+                updateChatHistory();
+                clearChatMessages();
+                
+                // Add welcome message
+                addMessage('assistant', 'Welcome to AI Builder! I can help you create code based on your requirements. What would you like to build?');
+            }
+
+            function updateChatHistory() {
+                chatHistory.innerHTML = '';
+                
+                chats.forEach(chat => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    if (chat.id === currentChatId) {
+                        historyItem.classList.add('active');
+                    }
+                    historyItem.textContent = chat.title;
+                    historyItem.dataset.chatId = chat.id;
+                    
+                    historyItem.addEventListener('click', function() {
+                        switchChat(chat.id);
+                    });
+                    
+                    chatHistory.appendChild(historyItem);
+                });
+            }
+
+            function switchChat(chatId) {
+                currentChatId = chatId;
+                updateChatHistory();
+                clearChatMessages();
+                
+                const chat = chats.find(c => c.id === chatId);
+                chat.messages.forEach(msg => {
+                    addMessage(msg.role, msg.content);
+                });
+            }
+
+            function clearChatMessages() {
+                chatMessages.innerHTML = '';
+            }
+
+            function addMessage(role, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                
+                // Process code blocks
+                const formattedContent = formatMessage(content);
+                messageContent.innerHTML = formattedContent;
