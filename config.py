@@ -1,15 +1,18 @@
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
+from dotenv import load_dotenv
 import json
 import os
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+load_dotenv()
+GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 
 
 def chat_init():
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
         temperature=0.7,
+        api_key=GROQ_API_KEY,
         max_tokens=32768,
         max_retries=2,
     )
@@ -23,10 +26,8 @@ def generate_plan(prompt : str):
         [
             (
                 "system",
-                """You are an ultimate code builder (you are packed with skills) Planskill for
-                planning in natural language each function and class. return the statement in a 
-                list only a list eg, What functions classes are required in this why they are required
-                [].
+                """Only output a list nothing else a list of plan in [] a list. You are an ultimate code builder (you are packed with skills)
+                in a only the functions for the product required. list only a list eg, What functions are required to build the product
                 """,
             ),
             ("human", """{prompt}"""),
@@ -34,13 +35,11 @@ def generate_plan(prompt : str):
     )
     
     chain = prompt | chat
-    
     response = chain.invoke({"prompt" : prompt})
-    data = response.content.encode('utf-8')
-    parsed_data = json.loads(data)
-    return parsed_data
 
-def generate_code(text : str, plan : str, topic : str, code : str):
+    return response.content
+
+def generate_code(prompt_text : str, plan : str,):
     
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -49,16 +48,16 @@ def generate_code(text : str, plan : str, topic : str, code : str):
                 """You are an ultimate code builder (you are packed with skills) Codeskill for writing code
                 each function and class. You are allowed only to write code""",
             ),
-            ("human", """{prompt} The Plan is {plan} and the topic is you are gonna go onto is {topic} and the previous code is {code}"""),
+            ("human", """{prompt} The Plan is {plan}"""),
         ]
     )
     
     chain = prompt | chat
     
-    response = chain.invoke({"prompt" : text, "plan" : plan, "topic" : topic, "code" : code}).content
+    response = chain.invoke({"prompt" : prompt_text, "plan" : plan,}).content
     return response
 
-def lexical_code_search(text : str, debug_plan : str, chain):
+def lexical_code_search(text : str, debug_plan : str,):
     
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -70,6 +69,9 @@ def lexical_code_search(text : str, debug_plan : str, chain):
             ("human", """This is the debug plan {plan} and the code is {code}"""),
         ]
     )
+    
+    chain = prompt | chat
+    
     response = chain.invoke({"plan" : debug_plan, "code" : text}).content
     return response
 
@@ -85,12 +87,12 @@ def generate_debug_plan(text : str, final_code : str):
                 Check which functions are doing wrong and what mistakes are there and 
                 generate the final code only the code alone.""",
             ),
-            ("human", """{code} {final_code}"""),
+            ("human", """{plan} {final_code}"""),
         ]
     )
     
     chain = prompt | chat
-    response = chain.invoke({"code" : text, "final_code" : final_code}).content
+    response = chain.invoke({"plan" : text, "final_code" : final_code}).content
     return response
  
             
