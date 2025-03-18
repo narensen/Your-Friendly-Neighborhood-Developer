@@ -63,7 +63,7 @@ def lexical_code_search(text : str, debug_plan : str,):
         [
             (
                 "system",
-                """You are an ultimate code debugger (you are packed with skills) Codeskill for searching code in natural language
+                """Provide only the code in output. Only the output code alone. You are an ultimate code debugger (you are packed with skills) Codeskill for searching code in natural language
                 each function and class. make sure to always look at the code and functions that are making issues segregate them and fix them.""",
             ),
             ("human", """This is the debug plan {plan} and the code is {code}"""),
