@@ -31,8 +31,12 @@ def main(request : PromptRequest):
     debug_plan = generate_debug_plan(generated_code, generated_plan)
     response = lexical_code_search(generated_code, debug_plan)
     
+    if request.fullstack:
+        frontend_response = generate_code("Generate a frontend for this code", response)
+    
     print(response)
-    return {"response" : response}
+    print(frontend_response)
+    return {"response" : response, "frontend_response" : frontend_response}
 
 if __name__ == "__main__":
     
