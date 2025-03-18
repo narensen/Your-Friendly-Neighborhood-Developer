@@ -26,12 +26,12 @@ async def main(request : PromptRequest):
     debug_plan = generate_debug_plan(generated_code, generated_plan)
     response = lexical_code_search(generated_code, debug_plan)
     
-    with open("main.py ", "w") as f:
+    with open("calc.py ", "w") as f:
         f.write(response)
     
     if request.fullstack:
-        frontend_response = generate_code("Generate a html css frontend for this code in a single file", response)
-        with open("main.py ", "w") as f:
+        frontend_response = generate_code("Generate a html css frontend for this code in a single file index.html", response)
+        with open("index.html", "w") as f:
             f.write(frontend_response)
     
     else:
