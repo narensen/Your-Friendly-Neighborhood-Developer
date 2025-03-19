@@ -26,8 +26,7 @@ def generate_plan(prompt : str):
         [
             (
                 "system",
-                """Only output a list nothing else a list of plan in [] a list. You are an ultimate code builder (you are packed with skills)
-                in a only the functions for the product required. list only a list eg, What functions are required to build the product
+                """How to build this code in the most robust way possible give the idea to me in a list
                 """,
             ),
             ("human", """{prompt}"""),

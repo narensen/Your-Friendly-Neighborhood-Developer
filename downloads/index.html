@@ -1,0 +1,166 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator and Product Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        
+        .calculator {
+            width: 50%;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product {
+            width: 50%;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            height: 40px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        select {
+            width: 100%;
+            height: 40px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        button[type="submit"] {
+            width: 100%;
+            height: 40px;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button[type="submit"]:hover {
+            background-color: #3e8e41;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h2>Calculator</h2>
+        <form id="calculator-form">
+            <label for="num1">Number 1:</label>
+            <input type="number" id="num1" name="num1">
+            <label for="num2">Number 2:</label>
+            <input type="number" id="num2" name="num2">
+            <label for="operation">Operation:</label>
+            <select id="operation" name="operation">
+                <option value="add">Add</option>
+                <option value="subtract">Subtract</option>
+                <option value="multiply">Multiply</option>
+                <option value="divide">Divide</option>
+            </select>
+            <button type="submit">Calculate</button>
+        </form>
+        <div id="calculator-result"></div>
+    </div>
+    
+    <div class="product">
+        <h2>Product</h2>
+        <form id="product-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+            <label for="description">Description:</label>
+            <input type="text" id="description" name="description">
+            <label for="requirements">Requirements:</label>
+            <input type="text" id="requirements" name="requirements">
+            <label for="functionalities">Functionalities:</label>
+            <input type="text" id="functionalities" name="functionalities">
+            <label for="blueprint">Blueprint:</label>
+            <input type="text" id="blueprint" name="blueprint">
+            <label for="features">Features:</label>
+            <input type="text" id="features" name="features">
+            <label for="roadmap">Roadmap:</label>
+            <input type="text" id="roadmap" name="roadmap">
+            <label for="deliverables">Deliverables:</label>
+            <input type="text" id="deliverables" name="deliverables">
+            <label for="timeline">Timeline:</label>
+            <input type="text" id="timeline" name="timeline">
+            <label for="resources">Resources:</label>
+            <input type="text" id="resources" name="resources">
+            <label for="budget">Budget:</label>
+            <input type="text" id="budget" name="budget">
+            <button type="submit">Create Product</button>
+        </form>
+        <div id="product-result"></div>
+    </div>
+    
+    <script>
+        const calculatorForm = document.getElementById('calculator-form');
+        const productForm = document.getElementById('product-form');
+        
+        calculatorForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const num1 = document.getElementById('num1').value;
+            const num2 = document.getElementById('num2').value;
+            const operation = document.getElementById('operation').value;
+            const response = await fetch('/calculator/operation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `num1=${num1}&num2=${num2}&operation=${operation}`
+            });
+            const result = await response.json();
+            document.getElementById('calculator-result').innerHTML = `Result: ${result.result}`;
+        });
+        
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+            const requirements = document.getElementById('requirements').value;
+            const functionalities = document.getElementById('functionalities').value;
+            const blueprint = document.getElementById('blueprint').value;
+            const features = document.getElementById('features').value;
+            const roadmap = document.getElementById('roadmap').value;
+            const deliverables = document.getElementById('deliverables').value;
+            const timeline = document.getElementById('timeline').value;
+            const resources = document.getElementById('resources').value;
+            const budget = document.getElementById('budget').value;
+            const response = await fetch('/product/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `name=${name}&description=${description}&requirements=${requirements}&functionalities=${functionalities}&blueprint=${blueprint}&features=${features}&roadmap=${roadmap}&deliverables=${deliverables}&timeline=${timeline}&resources=${resources}&budget=${budget}`
+            });
+            const result = await response.json();
+            document.getElementById('product-result').innerHTML = `Product created successfully: ${result.message}`;
+        });
+    </script>
+</body>
+</html>
+```
