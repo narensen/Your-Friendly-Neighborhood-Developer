@@ -1,5 +1,5 @@
-from api.config import *
-from api.models import *
+from config import *
+from models import *
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
