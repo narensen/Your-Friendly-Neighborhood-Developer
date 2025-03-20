@@ -1,4 +1,3 @@
-# Your Friendly Neighborhood Developer
 ![Screenshot from 2025-03-21 00-15-45](https://github.com/user-attachments/assets/703f612b-a2ff-48dc-8714-1c618181f8eb)
 
 A powerful tool to generate robust FastAPI backend code (and optional frontend) with ease. Built with Python, FastAPI, and AI-driven code generation, this project streamlines development by creating efficient, debugged, and production-ready code based on natural language prompts.
