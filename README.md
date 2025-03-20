@@ -1,4 +1,5 @@
 # Your Friendly Neighborhood Developer
+![Screenshot from 2025-03-21 00-15-45](https://github.com/user-attachments/assets/703f612b-a2ff-48dc-8714-1c618181f8eb)
 
 A powerful tool to generate robust FastAPI backend code (and optional frontend) with ease. Built with Python, FastAPI, and AI-driven code generation, this project streamlines development by creating efficient, debugged, and production-ready code based on natural language prompts.
 
@@ -14,6 +15,9 @@ A powerful tool to generate robust FastAPI backend code (and optional frontend) 
 2. The system generates a plan, writes the code, debugs it, and returns the result.
 3. Optionally request full-stack generation to get a matching frontend.
 4. Access the polished code via the API response or download it from the `downloads/` directory.
+
+![Screenshot from 2025-03-21 00-35-56](https://github.com/user-attachments/assets/51b0fb7c-41f2-41d6-b593-192cb861d3c8)
+
 
 ## Installation
 
@@ -32,4 +36,6 @@ Follow these steps to set up the project locally using Git Bash:
 3. **Set up your environment:**
    ```bash
    GROQ_API_KEY=your-api-key-here
+
+![Screenshot from 2025-03-21 00-36-04](https://github.com/user-attachments/assets/d1543126-5421-476b-a546-88b0fe456bec)
 
