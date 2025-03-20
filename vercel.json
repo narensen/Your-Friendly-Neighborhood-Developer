@@ -3,7 +3,7 @@
   "functions": {
     "main.py": {
       "runtime": "@vercel/python",
-      "maxDuration": 120
+      "maxDuration": 60
     }
   },
   "routes": [
