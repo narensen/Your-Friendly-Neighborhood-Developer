@@ -3,8 +3,13 @@ from models import *
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+import os
 
 app = FastAPI()
+
+# Create static directory if it doesn't exist
+os.makedirs("static", exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,11 +19,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount the static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def home():
-    return {"message": "Hello World"}
+    # Return the index.html file
+    with open("static/index.html", "r") as f:
+        return HTMLResponse(content=f.read())
 
+@app.get("/api")
+def api_home():
+    # Move the original home endpoint to /api
+    return {"message": "Hello World"}
 
 @app.post("/generate")
 async def main(request: PromptRequest):
@@ -42,7 +55,9 @@ async def main(request: PromptRequest):
         )
 
         with open("downloads/index.html", "w") as f:
-            f.write(frontend_response)
+            response = frontend_response.split("\n")
+            modified_text = "\n".join(response[1:-1])
+            f.write(modified_text)
 
     else:
         frontend_response = None
@@ -54,6 +69,5 @@ async def main(request: PromptRequest):
 
 if __name__ == "__main__":
 
-    import uvicorn
-
+    import uvicorn  
     uvicorn.run(app, host="0.0.0.0", port=8000)

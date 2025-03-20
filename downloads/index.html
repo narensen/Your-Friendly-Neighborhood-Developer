@@ -1,46 +1,58 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator App</title>
+    <title>Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
         }
-        .calculator {
-            width: 300px;
-            margin: 50px auto;
+        .container {
+            width: 80%;
+            margin: 40px auto;
+            background-color: #fff;
             padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .form-group input {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
         }
-        .input-field {
+        .form-group select {
             width: 100%;
             height: 40px;
             padding: 10px;
-            font-size: 18px;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
-        .button {
+        .btn {
             width: 100%;
             height: 40px;
-            padding: 10px;
-            font-size: 18px;
-            border: none;
-            border-radius: 10px;
             background-color: #4CAF50;
             color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
-        .button:hover {
+        .btn:hover {
             background-color: #3e8e41;
         }
-        .result {
+        #result {
             font-size: 24px;
             font-weight: bold;
             margin-top: 20px;
@@ -48,157 +60,59 @@
     </style>
 </head>
 <body>
-    <div class="calculator">
-        <input type="text" id="input-field" class="input-field" placeholder="Enter a math expression">
-        <button class="button" onclick="calculate()">Calculate</button>
-        <div class="result" id="result"></div>
+    <div class="container">
+        <h2>Calculator</h2>
+        <form id="calculator-form">
+            <div class="form-group">
+                <label for="num1">Number 1:</label>
+                <input type="number" id="num1" name="num1" required>
+            </div>
+            <div class="form-group">
+                <label for="operation">Operation:</label>
+                <select id="operation" name="operation" required>
+                    <option value="add">Add</option>
+                    <option value="subtract">Subtract</option>
+                    <option value="multiply">Multiply</option>
+                    <option value="divide">Divide</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="num2">Number 2:</label>
+                <input type="number" id="num2" name="num2" required>
+            </div>
+            <button class="btn" type="submit">Calculate</button>
+        </form>
+        <div id="result"></div>
     </div>
 
     <script>
-        function validateUserInput(inputStr) {
-            const pattern = /^[\d\s\+\-\*\/\.]+$/;
-            return pattern.test(inputStr);
-        }
+        const form = document.getElementById('calculator-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const num1 = parseFloat(document.getElementById('num1').value);
+            const operation = document.getElementById('operation').value;
+            const num2 = parseFloat(document.getElementById('num2').value);
 
-        function processInputData(inputStr) {
             try {
-                const expression = Function(`return ${inputStr}`);
-                return expression;
+                const response = await fetch('/calculator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ num1, num2, operation })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('result').innerText = `Result: ${data.result}`;
             } catch (error) {
-                return null;
+                console.error('Error:', error);
+                document.getElementById('result').innerText = `Error: ${error.message}`;
             }
-        }
-
-        function determineRequiredFunctions(expression) {
-            const requiredFunctions = [];
-            const func = expression.toString();
-            if (func.includes('+')) {
-                requiredFunctions.push('addition');
-            }
-            if (func.includes('-')) {
-                requiredFunctions.push('subtraction');
-            }
-            if (func.includes('*')) {
-                requiredFunctions.push('multiplication');
-            }
-            if (func.includes('/')) {
-                requiredFunctions.push('division');
-            }
-            return requiredFunctions;
-        }
-
-        function generateFunctionList(requiredFunctions) {
-            const functionList = [];
-            for (const func of requiredFunctions) {
-                if (func === 'addition') {
-                    functionList.push((a, b) => a + b);
-                } else if (func === 'subtraction') {
-                    functionList.push((a, b) => a - b);
-                } else if (func === 'multiplication') {
-                    functionList.push((a, b) => a * b);
-                } else if (func === 'division') {
-                    functionList.push((a, b) => a / b);
-                }
-            }
-            return functionList;
-        }
-
-        function filterRelevantFunctions(functionList, expression) {
-            const relevantFunctions = [];
-            const func = expression.toString();
-            if (func.includes('+')) {
-                relevantFunctions.push((a, b) => a + b);
-            }
-            if (func.includes('-')) {
-                relevantFunctions.push((a, b) => a - b);
-            }
-            if (func.includes('*')) {
-                relevantFunctions.push((a, b) => a * b);
-            }
-            if (func.includes('/')) {
-                relevantFunctions.push((a, b) => a / b);
-            }
-            return relevantFunctions;
-        }
-
-        function prioritizeFunctions(relevantFunctions) {
-            const prioritizedFunctions = [];
-            for (const func of relevantFunctions) {
-                if (func.toString().includes('*')) {
-                    prioritizedFunctions.unshift(func);
-                } else if (func.toString().includes('/')) {
-                    prioritizedFunctions.unshift(func);
-                } else {
-                    prioritizedFunctions.push(func);
-                }
-            }
-            return prioritizedFunctions;
-        }
-
-        function createProductBlueprint(prioritizedFunctions) {
-            const productBlueprint = [];
-            for (const func of prioritizedFunctions) {
-                if (func.toString().includes('+')) {
-                    productBlueprint.push('addition');
-                } else if (func.toString().includes('-')) {
-                    productBlueprint.push('subtraction');
-                } else if (func.toString().includes('*')) {
-                    productBlueprint.push('multiplication');
-                } else if (func.toString().includes('/')) {
-                    productBlueprint.push('division');
-                }
-            }
-            return productBlueprint;
-        }
-
-        function reviewAndRefinePlan(productBlueprint) {
-            const refinedPlan = [];
-            for (const item of productBlueprint) {
-                if (item === 'addition') {
-                    refinedPlan.push('perform addition');
-                } else if (item === 'subtraction') {
-                    refinedPlan.push('perform subtraction');
-                } else if (item === 'multiplication') {
-                    refinedPlan.push('perform multiplication');
-                } else if (item === 'division') {
-                    refinedPlan.push('perform division');
-                }
-            }
-            return refinedPlan;
-        }
-
-        function executeRefinedPlan(refinedPlan, inputStr) {
-            const result = eval(inputStr);
-            return result;
-        }
-
-        function calculatorApp(inputStr) {
-            if (!validateUserInput(inputStr)) {
-                return 'Invalid input';
-            }
-
-            const expression = processInputData(inputStr);
-            if (expression === null) {
-                return 'Invalid input';
-            }
-
-            const requiredFunctions = determineRequiredFunctions(expression);
-            const functionList = generateFunctionList(requiredFunctions);
-            const relevantFunctions = filterRelevantFunctions(functionList, expression);
-            const prioritizedFunctions = prioritizeFunctions(relevantFunctions);
-            const productBlueprint = createProductBlueprint(prioritizedFunctions);
-            const refinedPlan = reviewAndRefinePlan(productBlueprint);
-            const result = executeRefinedPlan(refinedPlan, inputStr);
-
-            return result;
-        }
-
-        function calculate() {
-            const inputStr = document.getElementById('input-field').value;
-            const result = calculatorApp(inputStr);
-            document.getElementById('result').innerText = result;
-        }
+        });
     </script>
 </body>
 </html>
-```
