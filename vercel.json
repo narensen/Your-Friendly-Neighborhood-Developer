@@ -13,8 +13,8 @@
     }
   ],
   "functions": {
-    "app/api/**/route.ts": {
-      "maxDuration": 180
+    "api/users/**/*.js": {
+      "maxDuration": 30
     }
   }
 }
