@@ -42,20 +42,23 @@ async def main(request: PromptRequest):
     generated_code = generate_code(request.prompt, generated_plan)
     debug_plan = generate_debug_plan(generated_code, generated_plan)
     backend_response = lexical_code_search(generated_code, debug_plan)
+    backend_lines = backend_response.split("\n")
+    backend_response_ = "\n".join(backend_lines[1:-1])
 
     # Save backend code
-    with open("downloads/main.py", "w") as f:
-        backend_lines = backend_response.split("\n")
-        text = "\n".join(backend_lines[1:-1])
-        f.write(text)
-
+    
+    
     frontend_response = None
     if request.fullstack:
         frontend_response = generate_code(
-            "Generate a html css frontend for the given code in a single file", backend_response
+            "Generate a frontend for the given code in a single file", backend_response
         )
+        
+        backend_response = generate_code("Connect the backend and frontend using static files give me only the python code" + backend_response_, frontend_response)
 
-        # Save frontend code
+        with open("downloads/main.py", "w") as f:
+            f.write(backend_response)
+        
         with open("downloads/index.html", "w") as f:
             frontend_lines = frontend_response.split("\n")
             modified_text = "\n".join(frontend_lines[1:-1])
