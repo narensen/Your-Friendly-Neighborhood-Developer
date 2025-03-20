@@ -35,39 +35,37 @@ def api_home():
 
 @app.post("/generate")
 async def main(request: PromptRequest):
-
     if request.fullstack:
-        request.prompt = "Generate a fastapi code " + request.prompt
+        request.prompt = "Generate a fastapi backend code only" + request.prompt
+    
     generated_plan = generate_plan(request.prompt)
-
     generated_code = generate_code(request.prompt, generated_plan)
     debug_plan = generate_debug_plan(generated_code, generated_plan)
-    response = lexical_code_search(generated_code, debug_plan)
+    backend_response = lexical_code_search(generated_code, debug_plan)
 
+    # Save backend code
     with open("downloads/main.py", "w") as f:
-        response = response.split("\n")
-        modified_text = "\n".join(response[1:-1])
-        f.write(modified_text)
+        backend_lines = backend_response.split("\n")
+        text = "\n".join(backend_lines[1:-1])
+        f.write(text)
 
+    frontend_response = None
     if request.fullstack:
         frontend_response = generate_code(
-            "Generate a html css frontend for the given code in a single file", response
+            "Generate a html css frontend for the given code in a single file", backend_response
         )
 
+        # Save frontend code
         with open("downloads/index.html", "w") as f:
-            response = frontend_response.split("\n")
-            modified_text = "\n".join(response[1:-1])
+            frontend_lines = frontend_response.split("\n")
+            modified_text = "\n".join(frontend_lines[1:-1])
             f.write(modified_text)
 
-    else:
-        frontend_response = None
-
-    print(response)
+    print(backend_response)
     print(frontend_response)
-    return {"response": response, "frontend_response": frontend_response}
+    return {"response": backend_response, "frontend_response": frontend_response}
 
 
 if __name__ == "__main__":
-
     import uvicorn  
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -26,7 +26,7 @@ def generate_plan(prompt : str):
         [
             (
                 "system",
-                """How to build this code in the most robust way possible give the idea to me in a list
+                """How to build backend of this code properly. THe most robust and efficient way
                 """,
             ),
             ("human", """{prompt}"""),

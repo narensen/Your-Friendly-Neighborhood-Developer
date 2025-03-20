@@ -3,43 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
+    <title>Scientific Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            text-align: center;
         }
-        .container {
-            width: 80%;
-            margin: 40px auto;
-            background-color: #fff;
+        
+        #calculator {
+            width: 300px;
+            margin: 50px auto;
             padding: 20px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
+        
+        label {
             display: block;
             margin-bottom: 10px;
         }
-        .form-group input {
+        
+        input[type="number"] {
             width: 100%;
-            height: 40px;
+            height: 30px;
+            margin-bottom: 20px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .form-group select {
+        
+        select {
             width: 100%;
-            height: 40px;
+            height: 30px;
+            margin-bottom: 20px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .btn {
+        
+        button {
             width: 100%;
             height: 40px;
             background-color: #4CAF50;
@@ -49,68 +52,75 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .btn:hover {
+        
+        button:hover {
             background-color: #3e8e41;
         }
+        
         #result {
+            margin-top: 20px;
             font-size: 24px;
             font-weight: bold;
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Calculator</h2>
-        <form id="calculator-form">
-            <div class="form-group">
-                <label for="num1">Number 1:</label>
-                <input type="number" id="num1" name="num1" required>
-            </div>
-            <div class="form-group">
-                <label for="operation">Operation:</label>
-                <select id="operation" name="operation" required>
-                    <option value="add">Add</option>
-                    <option value="subtract">Subtract</option>
-                    <option value="multiply">Multiply</option>
-                    <option value="divide">Divide</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="num2">Number 2:</label>
-                <input type="number" id="num2" name="num2" required>
-            </div>
-            <button class="btn" type="submit">Calculate</button>
-        </form>
-        <div id="result"></div>
+    <div id="calculator">
+        <h2>Scientific Calculator</h2>
+        <label for="num1">Number 1:</label>
+        <input type="number" id="num1" required>
+        <label for="operation">Operation:</label>
+        <select id="operation">
+            <option value="add">Add</option>
+            <option value="subtract">Subtract</option>
+            <option value="multiply">Multiply</option>
+            <option value="divide">Divide</option>
+            <option value="power">Power</option>
+            <option value="sqrt">Square Root</option>
+            <option value="log">Logarithm</option>
+            <option value="sin">Sine</option>
+            <option value="cos">Cosine</option>
+            <option value="tan">Tangent</option>
+        </select>
+        <label for="num2">Number 2:</label>
+        <input type="number" id="num2">
+        <button id="calculate">Calculate</button>
+        <p id="result"></p>
     </div>
 
     <script>
-        const form = document.getElementById('calculator-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const num1 = parseFloat(document.getElementById('num1').value);
-            const operation = document.getElementById('operation').value;
-            const num2 = parseFloat(document.getElementById('num2').value);
+        const calculateButton = document.getElementById('calculate');
+        const num1Input = document.getElementById('num1');
+        const operationSelect = document.getElementById('operation');
+        const num2Input = document.getElementById('num2');
+        const resultParagraph = document.getElementById('result');
+
+        calculateButton.addEventListener('click', async () => {
+            const num1 = parseFloat(num1Input.value);
+            const operation = operationSelect.value;
+            const num2 = num2Input.value !== '' ? parseFloat(num2Input.value) : null;
 
             try {
-                const response = await fetch('/calculator', {
+                const response = await fetch('/calculate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ num1, num2, operation })
+                    body: JSON.stringify({
+                        operation: operation,
+                        num1: num1,
+                        num2: num2
+                    })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
                 const data = await response.json();
-                document.getElementById('result').innerText = `Result: ${data.result}`;
+                if (data.error) {
+                    resultParagraph.textContent = `Error: ${data.error}`;
+                } else {
+                    resultParagraph.textContent = `Result: ${data.result}`;
+                }
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('result').innerText = `Error: ${error.message}`;
+                resultParagraph.textContent = `Error: ${error.message}`;
             }
         });
     </script>
