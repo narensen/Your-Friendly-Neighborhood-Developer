@@ -3,85 +3,668 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Friendly Neighboorhood Developer</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+    <title>Your Friendly Neighborhood Developer</title>
+    <style>
+        :root {
+            --primary-color: #000;
+            --secondary-color: #fff;
+            --accent-color: #333;
+            --background-color: #f8f8f8;
+            --transition-speed: 0.3s;
+        }
+        
+        * {
+            box-sizing: border-box;
+            transition: all var(--transition-speed) ease;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(125deg, rgba(255,255,255,0) 0%, rgba(240,240,240,0.8) 100%);
+            z-index: -1;
+        }
+        
+        .fluid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.05;
+            overflow: hidden;
+        }
+        
+        .fluid-circle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            filter: blur(60px);
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .fluid-circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .fluid-circle:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            top: 60%;
+            left: 70%;
+            animation-delay: -5s;
+        }
+        
+        .fluid-circle:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            top: 80%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.05);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.95);
+            }
+            100% {
+                transform: translate(0px, 0px) scale(1);
+            }
+        }
+        
+        h1, h2 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1::after, h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+            animation: slide 1.5s ease-in-out forwards;
+        }
+        
+        @keyframes slide {
+            to {
+                left: 0;
+            }
+        }
+        
+        .container {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        form {
+            background-color: var(--background-color);
+            padding: 30px;
+            border: 1px solid var(--primary-color);
+            margin-bottom: 30px;
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            animation-delay: 0.2s;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--primary-color);
+            background-color: var(--secondary-color);
+            resize: vertical;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        textarea:focus {
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        
+        .checkbox-container {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 24px;
+            width: 24px;
+            background-color: var(--secondary-color);
+            border: 2px solid var(--primary-color);
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+        
+        .custom-checkbox:hover input ~ .checkmark {
+            background-color: #f0f0f0;
+        }
+        
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: var(--primary-color);
+        }
+        
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+        
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+        
+        .custom-checkbox .checkmark:after {
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid var(--secondary-color);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+        
+        button:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: -100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.3s;
+        }
+        
+        button:hover::after {
+            left: 100%;
+        }
+        
+        pre {
+            background-color: var(--background-color);
+            padding: 20px;
+            overflow-x: auto;
+            border: 1px solid var(--primary-color);
+            white-space: pre-wrap;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        pre::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.03) 0%, transparent 10%, transparent 90%, rgba(0,0,0,0.03) 100%);
+            pointer-events: none;
+        }
+        
+        .result-container {
+            margin: 30px 0;
+            animation-delay: 0.4s;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .result-container.show {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .download-btn {
+            margin-top: 15px;
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 8px 16px;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .download-btn:hover {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .download-btn:active {
+            transform: translateY(0);
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 40px 0;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .spinner::before,
+        .spinner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: var(--primary-color);
+        }
+        
+        .spinner::before {
+            z-index: 10;
+            animation: spin 1s infinite linear;
+        }
+        
+        .spinner::after {
+            border: 3px solid rgba(0,0,0,0.1);
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .typing-animation {
+            display: inline-block;
+            width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 1.5s steps(20, end) forwards;
+        }
+        
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+        
+        .code-line {
+            opacity: 0;
+        }
+        
+        .animated-text span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeUp 0.8s forwards;
+        }
+        
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .copy-icon {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 10px 20px;
+            border-radius: 4px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
+    <div class="fluid-background">
+        <div class="fluid-circle"></div>
+        <div class="fluid-circle"></div>
+        <div class="fluid-circle"></div>
+    </div>
+
+    <h1><span class="typing-animation">Your Friendly Neighborhood Developer</span></h1>
+    
     <div class="container">
-        <header>
-            <h1>Your Friendly Neighboorhood Developer</h1>
-            <p>Powered by Groq's LLM API via LangChain</p>
-        </header>
-
-        <main>
-            <section class="input-section">
-                <h2>What would you like to build?</h2>
-                <div class="prompt-container">
-                    <textarea id="prompt-input" placeholder="e.g., 'Build a Calculator using JavaScript'" rows="4"></textarea>
-                    <div class="buttons">
-                        <button id="generate-btn" class="primary-btn">Generate Code</button>
-                        <button id="clear-btn" class="secondary-btn">Clear Results</button>
-                    </div>
-                </div>
-            </section>
-
-            <section class="output-section">
-                <div class="loading hidden" id="loading">
-                    <div class="spinner"></div>
-                    <p>Generating code... This may take a minute.</p>
-                </div>
-
-                <div class="results hidden" id="results">
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="plan-tab">Plan</button>
-                        <button class="tab-btn" data-tab="code-tab">Code</button>
-                        <button class="tab-btn" data-tab="debug-tab">Debug</button>
-                        <button class="tab-btn" data-tab="complete-code-tab">Complete Code</button>
-                        <button class="tab-btn" data-tab="validation-tab">Validation</button>
-                    </div>
-
-                    <div class="tab-content">
-                        <div id="plan-tab" class="tab-pane active">
-                            <h3>Implementation Plan</h3>
-                            <pre id="plan-output" class="code-output"></pre>
-                        </div>
-                        
-                        <div id="code-tab" class="tab-pane">
-                            <h3>Generated Code</h3>
-                            <pre><code id="code-output" class="code-output"></code></pre>
-                        </div>
-                        
-                        <div id="debug-tab" class="tab-pane">
-                            <h3>Debug Information</h3>
-                            <div id="debug-output" class="code-output"></div>
-                            
-                            <h4>Debug Plan</h4>
-                            <div id="debug-plan-output" class="code-output"></div>
-                        </div>
-                        
-                        <div id="complete-code-tab" class="tab-pane">
-                            <h3>Complete Code</h3>
-                            <div id="complete-code-output" class="code-output"></div>
-                        </div>
-                        
-                        <div id="validation-tab" class="tab-pane">
-                            <h3>Validation Check</h3>
-                            <div id="validation-output" class="code-output"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            <p>&copy;Your Friendly Neighboorhood Developer</p>
-        </footer>
+        <form id="generatorForm">
+            <h2>Input Prompt</h2>
+            <textarea id="promptInput" placeholder="Enter your code prompt here..."></textarea>
+            
+            <div class="checkbox-container">
+                <label class="custom-checkbox">
+                    <input type="checkbox" id="fullstackCheckbox">
+                    <span class="checkmark"></span>
+                </label>
+                <span>Generate Fullstack Application (Backend + Frontend)</span>
+            </div>
+            
+            <button type="submit">Generate Code</button>
+        </form>
     </div>
     
-    <script src="script.js"></script>
+    <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p class="animated-text">Generating code...</p>
+    </div>
+    
+    <div class="result-container" id="backendResult" style="display: none;">
+        <h2>Generated Backend Code</h2>
+        <div class="code-container">
+            <pre id="backendCode"></pre>
+            <button class="copy-btn" id="copyBackend" title="Copy to clipboard">
+                <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+        </div>
+        <button class="download-btn" id="downloadBackend">Download main.py</button>
+    </div>
+    
+    <div class="result-container" id="frontendResult" style="display: none;">
+        <h2>Generated Frontend Code</h2>
+        <div class="code-container">
+            <pre id="frontendCode"></pre>
+            <button class="copy-btn" id="copyFrontend" title="Copy to clipboard">
+                <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+        </div>
+        <button class="download-btn" id="downloadFrontend">Download index.html</button>
+    </div>
+    
+    <div class="copy-toast" id="copyToast">Copied to clipboard!</div>
+    
+    <script>
+        // Animate elements on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            animateTextByLetters('.animated-text');
+        });
+        
+        function animateTextByLetters(selector) {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                const text = element.textContent;
+                element.textContent = '';
+                
+                for (let i = 0; i < text.length; i++) {
+                    const span = document.createElement('span');
+                    span.textContent = text[i];
+                    span.style.animationDelay = `${i * 0.03}s`;
+                    element.appendChild(span);
+                }
+            });
+        }
+        
+        function animateCodeLines(codeElement) {
+            const text = codeElement.textContent;
+            const lines = text.split('\n');
+            codeElement.innerHTML = '';
+            
+            lines.forEach((line, index) => {
+                const lineElement = document.createElement('div');
+                lineElement.textContent = line;
+                lineElement.classList.add('code-line');
+                lineElement.style.animationDelay = `${index * 0.05}s`;
+                lineElement.style.animation = 'fadeIn 0.5s forwards';
+                codeElement.appendChild(lineElement);
+            });
+        }
+        
+        document.getElementById('generatorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prompt = document.getElementById('promptInput').value;
+            const fullstack = document.getElementById('fullstackCheckbox').checked;
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+            
+            // Show loading indicator with animation
+            document.getElementById('loadingIndicator').style.display = 'block';
+            animateTextByLetters('#loadingIndicator .animated-text');
+            
+            // Hide previous results
+            document.getElementById('backendResult').style.display = 'none';
+            document.getElementById('frontendResult').style.display = 'none';
+            
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt, fullstack }),
+                });
+                
+                const data = await response.json();
+                
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                // Display backend code with animation
+                if (data.response) {
+                    const backendCodeElement = document.getElementById('backendCode');
+                    backendCodeElement.textContent = Array.isArray(data.response) ? 
+                        data.response.join('\n') : data.response;
+                    
+                    const backendResult = document.getElementById('backendResult');
+                    backendResult.style.display = 'block';
+                    backendResult.classList.add('show');
+                    
+                    // Animate code appearance
+                    setTimeout(() => {
+                        animateCodeLines(backendCodeElement);
+                    }, 300);
+                }
+                
+                // Display frontend code if available with animation
+                if (data.frontend_response) {
+                    const frontendCodeElement = document.getElementById('frontendCode');
+                    frontendCodeElement.textContent = data.frontend_response;
+                    
+                    const frontendResult = document.getElementById('frontendResult');
+                    frontendResult.style.display = 'block';
+                    frontendResult.classList.add('show');
+                    
+                    // Animate code appearance
+                    setTimeout(() => {
+                        animateCodeLines(frontendCodeElement);
+                    }, 500);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during code generation. Please try again.');
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        });
+        
+        // Handle backend code download
+        document.getElementById('downloadBackend').addEventListener('click', function() {
+            const code = document.getElementById('backendCode').textContent;
+            downloadFile('main.py', code);
+        });
+        
+        // Handle frontend code download
+        document.getElementById('downloadFrontend').addEventListener('click', function() {
+            const code = document.getElementById('frontendCode').textContent;
+            downloadFile('index.html', code);
+        });
+        
+        // Copy to clipboard functionality
+        document.getElementById('copyBackend').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('backendCode').textContent);
+        });
+        
+        document.getElementById('copyFrontend').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('frontendCode').textContent);
+        });
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast();
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+        
+        function showToast() {
+            const toast = document.getElementById('copyToast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Helper function to download file
+        function downloadFile(filename, content) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+            element.setAttribute('download', filename);
+            
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            
+            element.click();
+            
+            document.body.removeChild(element);
+        }
+    </script>
 </body>
 </html>
