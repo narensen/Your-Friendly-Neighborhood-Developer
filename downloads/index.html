@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .form-group input {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        .form-group select {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        .button {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #3e8e41;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Calculator App</h2>
+        <form id="calculator-form">
+            <div class="form-group">
+                <label for="num1">Number 1:</label>
+                <input type="number" id="num1" required>
+            </div>
+            <div class="form-group">
+                <label for="operation">Operation:</label>
+                <select id="operation" required>
+                    <option value="add">Add</option>
+                    <option value="subtract">Subtract</option>
+                    <option value="multiply">Multiply</option>
+                    <option value="divide">Divide</option>
+                    <option value="sqrt">Square Root</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="num2">Number 2:</label>
+                <input type="number" id="num2">
+            </div>
+            <button class="button" id="calculate-btn">Calculate</button>
+        </form>
+        <div class="result" id="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Trigonometric Calculator</h2>
+        <form id="trigonometric-form">
+            <div class="form-group">
+                <label for="angle">Angle:</label>
+                <input type="number" id="angle" required>
+            </div>
+            <div class="form-group">
+                <label for="trigonometric-operation">Operation:</label>
+                <select id="trigonometric-operation" required>
+                    <option value="sin">Sine</option>
+                    <option value="cos">Cosine</option>
+                    <option value="tan">Tangent</option>
+                </select>
+            </div>
+            <button class="button" id="trigonometric-btn">Calculate</button>
+        </form>
+        <div class="result" id="trigonometric-result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Logarithmic Calculator</h2>
+        <form id="logarithmic-form">
+            <div class="form-group">
+                <label for="number">Number:</label>
+                <input type="number" id="number" required>
+            </div>
+            <div class="form-group">
+                <label for="logarithmic-operation">Operation:</label>
+                <select id="logarithmic-operation" required>
+                    <option value="log">Logarithm</option>
+                    <option value="exp">Exponential</option>
+                </select>
+            </div>
+            <button class="button" id="logarithmic-btn">Calculate</button>
+        </form>
+        <div class="result" id="logarithmic-result"></div>
+    </div>
+
+    <script>
+        const calculatorForm = document.getElementById('calculator-form');
+        const calculatorBtn = document.getElementById('calculate-btn');
+        const resultDiv = document.getElementById('result');
+
+        calculatorBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const num1 = parseFloat(document.getElementById('num1').value);
+            const operation = document.getElementById('operation').value;
+            const num2 = parseFloat(document.getElementById('num2').value);
+
+            if (isNaN(num1) || (operation !== 'sqrt' && isNaN(num2))) {
+                alert('Please enter valid numbers');
+                return;
+            }
+
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ num1, num2, operation }),
+                });
+
+                const result = await response.json();
+                resultDiv.innerText = `Result: ${result.result}`;
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        const trigonometricForm = document.getElementById('trigonometric-form');
+        const trigonometricBtn = document.getElementById('trigonometric-btn');
+        const trigonometricResultDiv = document.getElementById('trigonometric-result');
+
+        trigonometricBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const angle = parseFloat(document.getElementById('angle').value);
+            const operation = document.getElementById('trigonometric-operation').value;
+
+            if (isNaN(angle)) {
+                alert('Please enter a valid angle');
+                return;
+            }
+
+            try {
+                const response = await fetch('/trigonometric', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ angle, operation }),
+                });
+
+                const result = await response.json();
+                trigonometricResultDiv.innerText = `Result: ${result.result}`;
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        const logarithmicForm = document.getElementById('logarithmic-form');
+        const logarithmicBtn = document.getElementById('logarithmic-btn');
+        const logarithmicResultDiv = document.getElementById('logarithmic-result');
+
+        logarithmicBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const number = parseFloat(document.getElementById('number').value);
+            const operation = document.getElementById('logarithmic-operation').value;
+
+            if (isNaN(number)) {
+                alert('Please enter a valid number');
+                return;
+            }
+
+            try {
+                const response = await fetch('/logarithmic', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number, operation }),
+                });
+
+                const result = await response.json();
+                logarithmicResultDiv.innerText = `Result: ${result.result}`;
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
