@@ -1,147 +1,114 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+```python
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import math
+from typing import Optional
+from math import sqrt, sin, cos, tan, log, exp
+from enum import Enum
 
 app = FastAPI()
 
-# Define the input model for calculator operations
+class Operation(str, Enum):
+    add = "add"
+    subtract = "subtract"
+    multiply = "multiply"
+    divide = "divide"
+    sqrt = "sqrt"
+    sin = "sin"
+    cos = "cos"
+    tan = "tan"
+    log = "log"
+    exp = "exp"
+
 class CalculatorInput(BaseModel):
     num1: float
-    num2: float
-    operation: str
+    num2: Optional[float] = None
+    operation: Operation
 
-class ScientificCalculatorInput(BaseModel):
-    num1: float
-    operation: str
+class CalculatorOutput(BaseModel):
+    result: float
 
-# Define the API endpoint for calculator operations
-@app.post("/calculate")
-async def calculate(input: CalculatorInput):
-    try:
-        if input.operation == "add":
-            result = input.num1 + input.num2
-        elif input.operation == "subtract":
-            result = input.num1 - input.num2
-        elif input.operation == "multiply":
-            result = input.num1 * input.num2
-        elif input.operation == "divide":
-            if input.num2 != 0:
-                result = input.num1 / input.num2
-            else:
-                return JSONResponse(content={"error": "Cannot divide by zero"}, status_code=400)
-        elif input.operation == "sqrt":
-            if input.num1 >= 0:
-                result = math.sqrt(input.num1)
-            else:
-                return JSONResponse(content={"error": "Cannot calculate square root of negative number"}, status_code=400)
-        else:
-            return JSONResponse(content={"error": "Invalid operation"}, status_code=400)
+class TrigonometricInput(BaseModel):
+    angle: float
+    operation: Operation
 
-        return JSONResponse(content={"result": result}, status_code=200)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+class TrigonometricOutput(BaseModel):
+    result: float
 
-# Define the API endpoint for scientific calculator operations
-@app.post("/scientific-calculate")
-async def scientific_calculate(input: ScientificCalculatorInput):
-    try:
-        if input.operation == "sin":
-            result = math.sin(math.radians(input.num1))
-        elif input.operation == "cos":
-            result = math.cos(math.radians(input.num1))
-        elif input.operation == "tan":
-            if math.cos(math.radians(input.num1)) != 0:
-                result = math.tan(math.radians(input.num1))
-            else:
-                return JSONResponse(content={"error": "Cannot calculate tan of this number"}, status_code=400)
-        elif input.operation == "log":
-            if input.num1 > 0:
-                result = math.log(input.num1)
-            else:
-                return JSONResponse(content={"error": "Cannot calculate log of non-positive number"}, status_code=400)
-        elif input.operation == "exp":
-            result = math.exp(input.num1)
-        else:
-            return JSONResponse(content={"error": "Invalid operation"}, status_code=400)
+class LogarithmicInput(BaseModel):
+    number: float
+    operation: Operation
 
-        return JSONResponse(content={"result": result}, status_code=200)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+class LogarithmicOutput(BaseModel):
+    result: float
 
-# Define the API endpoint for calculator history
-calculator_history = []
-@app.get("/history")
-async def get_history():
-    try:
-        # Return calculator history
-        return JSONResponse(content={"history": calculator_history}, status_code=200)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+class ExponentialInput(BaseModel):
+    number: float
+    operation: Operation
 
-# Update the calculate function to store the history
-@app.post("/calculate")
-async def calculate(input: CalculatorInput):
-    try:
-        if input.operation == "add":
-            result = input.num1 + input.num2
-        elif input.operation == "subtract":
-            result = input.num1 - input.num2
-        elif input.operation == "multiply":
-            result = input.num1 * input.num2
-        elif input.operation == "divide":
-            if input.num2 != 0:
-                result = input.num1 / input.num2
-            else:
-                return JSONResponse(content={"error": "Cannot divide by zero"}, status_code=400)
-        elif input.operation == "sqrt":
-            if input.num1 >= 0:
-                result = math.sqrt(input.num1)
-            else:
-                return JSONResponse(content={"error": "Cannot calculate square root of negative number"}, status_code=400)
-        else:
-            return JSONResponse(content={"error": "Invalid operation"}, status_code=400)
+class ExponentialOutput(BaseModel):
+    result: float
 
-        calculator_history.append({
-            "operation": input.operation,
-            "num1": input.num1,
-            "num2": input.num2,
-            "result": result
-        })
+def calculate(num1: float, num2: Optional[float], operation: Operation):
+    if operation == Operation.add:
+        return num1 + num2
+    elif operation == Operation.subtract:
+        return num1 - num2
+    elif operation == Operation.multiply:
+        return num1 * num2
+    elif operation == Operation.divide:
+        if num2 == 0:
+            raise HTTPException(status_code=400, detail="Cannot divide by zero")
+        return num1 / num2
+    elif operation == Operation.sqrt:
+        if num1 < 0:
+            raise HTTPException(status_code=400, detail="Cannot take square root of negative number")
+        return sqrt(num1)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid operation")
 
-        return JSONResponse(content={"result": result}, status_code=200)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+def trigonometric(angle: float, operation: Operation):
+    if operation == Operation.sin:
+        return sin(angle)
+    elif operation == Operation.cos:
+        return cos(angle)
+    elif operation == Operation.tan:
+        return tan(angle)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid operation")
 
-# Update the scientific_calculate function to store the history
-@app.post("/scientific-calculate")
-async def scientific_calculate(input: ScientificCalculatorInput):
-    try:
-        if input.operation == "sin":
-            result = math.sin(math.radians(input.num1))
-        elif input.operation == "cos":
-            result = math.cos(math.radians(input.num1))
-        elif input.operation == "tan":
-            if math.cos(math.radians(input.num1)) != 0:
-                result = math.tan(math.radians(input.num1))
-            else:
-                return JSONResponse(content={"error": "Cannot calculate tan of this number"}, status_code=400)
-        elif input.operation == "log":
-            if input.num1 > 0:
-                result = math.log(input.num1)
-            else:
-                return JSONResponse(content={"error": "Cannot calculate log of non-positive number"}, status_code=400)
-        elif input.operation == "exp":
-            result = math.exp(input.num1)
-        else:
-            return JSONResponse(content={"error": "Invalid operation"}, status_code=400)
+def logarithmic(number: float, operation: Operation):
+    if operation == Operation.log:
+        if number <= 0:
+            raise HTTPException(status_code=400, detail="Cannot take logarithm of non-positive number")
+        return log(number)
+    elif operation == Operation.exp:
+        return exp(number)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid operation")
 
-        calculator_history.append({
-            "operation": input.operation,
-            "num1": input.num1,
-            "result": result
-        })
+@app.post("/calculate", response_model=CalculatorOutput)
+def calculate_endpoint(input: CalculatorInput):
+    return CalculatorOutput(result=calculate(input.num1, input.num2, input.operation))
 
-        return JSONResponse(content={"result": result}, status_code=200)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+@app.post("/trigonometric", response_model=TrigonometricOutput)
+def trigonometric_endpoint(input: TrigonometricInput):
+    return TrigonometricOutput(result=trigonometric(input.angle, input.operation))
+
+@app.post("/logarithmic", response_model=LogarithmicOutput)
+def logarithmic_endpoint(input: LogarithmicInput):
+    return LogarithmicOutput(result=logarithmic(input.number, input.operation))
+
+@app.post("/exponential", response_model=ExponentialOutput)
+def exponential_endpoint(input: ExponentialInput):
+    return ExponentialOutput(result=logarithmic(input.number, input.operation))
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+from fastapi.responses import HTMLResponse
+from pathlib import Path
+
+@app.get("/index", response_class=HTMLResponse)
+def read_index():
+    return Path("index.html").read_text()
+```

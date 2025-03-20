@@ -10,10 +10,10 @@ GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 
 def chat_init():
     llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.2-90b-vision-preview",
         temperature=0.7,
         api_key=GROQ_API_KEY,
-        max_tokens=32768,
+        max_tokens=8192,
         max_retries=2,
     )
     return llm
