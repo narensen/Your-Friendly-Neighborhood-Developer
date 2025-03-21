@@ -71,8 +71,8 @@ async def main(request: PromptRequest):
             f.write(modified_text)
             
         deployment_instructions = generate_code(
-            "Give me the deployment instructions for this code" + backend_response, 
-            "Give me the deployment instructions for this code" + modified_text
+            "Give me the instructions for how to run this code" + backend_response, 
+            "Give me the instructions for how to run this code" + modified_text
         )
             
     return {"response": backend_response, "frontend_response": modified_text, "deployment_instructions": deployment_instructions}
