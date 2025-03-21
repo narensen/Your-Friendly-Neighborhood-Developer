@@ -52,6 +52,8 @@ async def main(request: PromptRequest):
         frontend_response = generate_code(
             "Generate a frontend for the given code in a single file", backend_response
         )
+        frontend_lines = frontend_response.split("\n")
+        frontend_response = "\n".join(frontend_lines[1:-1])
 
         backend_response = generate_code(
             """Give me the backend code alone nothing else just code not text anything. Give me the entire backend code alone I just want to copy paste Connect the backend and frontend using static files give me only the python code as you are working 
@@ -67,16 +69,15 @@ async def main(request: PromptRequest):
             f.write(backend_response)
 
         with open("downloads/index.html", "w") as f:
-            frontend_lines = frontend_response.split("\n")
-            modified_text = "\n".join(frontend_lines[1:-1])
-            f.write(modified_text)
+            
+            f.write(frontend_response)
             
         deployment_instructions = generate_code(
             "Give me the instructions for how to run this code" + backend_response, 
-            "Give me the instructions for how to run this code" + modified_text
+            "Give me the instructions for how to run this code" + frontend_response
         )
             
-    return {"response": backend_response, "frontend_response": modified_text, "deployment_instructions": deployment_instructions}
+    return {"response": backend_response, "frontend_response": frontend_response, "deployment_instructions": deployment_instructions}
 
 
 if __name__ == "__main__":
