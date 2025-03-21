@@ -59,10 +59,11 @@ async def main(request: PromptRequest):
             + backend_response_,
             frontend_response,
         )
+        
+        backend_lines = backend_response.split("\n")
+        backend_response = "\n".join(backend_lines[1:-1])
 
         with open("downloads/main.py", "w") as f:
-            backend_lines = backend_response.split("\n")
-            backend_response = "\n".join(backend_lines[1:-1])
             f.write(backend_response)
 
         with open("downloads/index.html", "w") as f:

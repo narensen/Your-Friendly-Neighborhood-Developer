@@ -1,0 +1,97 @@
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialogue Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .input-field {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #3e8e41;
+        }
+        .response {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Dialogue Management System</h2>
+        <input type="text" id="prompt" class="input-field" placeholder="Enter your prompt">
+        <button class="button" onclick="handleDialogue()">Get Response</button>
+        <button class="button" onclick="recommendMovies()">Get Movie Recommendations</button>
+        <div id="response" class="response"></div>
+    </div>
+
+    <script>
+        const handleDialogue = async () => {
+            const prompt = document.getElementById('prompt').value;
+            const response = await fetch('http://localhost:8000/dialogue', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await response.json();
+            document.getElementById('response').innerHTML = data.response;
+        }
+
+        const recommendMovies = async () => {
+            const prompt = document.getElementById('prompt').value;
+            const response = await fetch('http://localhost:8000/recommend_movies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await response.json();
+            const recommendations = data.recommendations.map(recommendation => {
+                return `
+                    <h3>${recommendation.title}</h3>
+                    <p>Genre: ${recommendation.genre}</p>
+                    <p>Director: ${recommendation.director}</p>
+                    <p>Year: ${recommendation.year}</p>
+                `;
+            });
+            document.getElementById('response').innerHTML = recommendations.join('');
+        }
+    </script>
+</body>
+</html>
+```
