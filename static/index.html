@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Friendly Neighborhood Developer</title>
+    <!-- Add marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary-color: #000;
@@ -11,6 +13,8 @@
             --accent-color: #333;
             --background-color: #f8f8f8;
             --transition-speed: 0.3s;
+            --code-bg: #f5f5f5;
+            --code-border: #ddd;
         }
         
         * {
@@ -445,6 +449,85 @@
             opacity: 1;
             transform: translateY(0);
         }
+        
+        /* Markdown styles */
+        .markdown-content {
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .markdown-content h1, 
+        .markdown-content h2, 
+        .markdown-content h3, 
+        .markdown-content h4 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: bold;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+        
+        .markdown-content h1 {
+            font-size: 2em;
+        }
+        
+        .markdown-content h2 {
+            font-size: 1.5em;
+        }
+        
+        .markdown-content h3 {
+            font-size: 1.25em;
+        }
+        
+        .markdown-content ul, 
+        .markdown-content ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+        
+        .markdown-content li {
+            margin-bottom: 0.25em;
+        }
+        
+        .markdown-content p {
+            margin-bottom: 16px;
+        }
+        
+        .markdown-content code {
+            font-family: 'Courier New', monospace;
+            background-color: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+            border: 1px solid var(--code-border);
+        }
+        
+        .markdown-content pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 3px;
+            padding: 16px;
+            overflow: auto;
+            margin-bottom: 16px;
+        }
+        
+        .markdown-content pre code {
+            background-color: transparent;
+            padding: 0;
+            border: 0;
+            display: block;
+            line-height: 1.45;
+        }
+        
+        /* Deployment instructions specific styling */
+        .deployment-container {
+            background-color: rgba(0, 0, 0, 0.02);
+            border-left: 4px solid var(--primary-color);
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 0 4px 4px 0;
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -476,6 +559,21 @@
     <div class="loading" id="loadingIndicator">
         <div class="spinner"></div>
         <p class="animated-text">Generating...</p>
+    </div>
+    
+    <!-- Deployment Instructions Section with Markdown Support -->
+    <div class="result-container" id="deploymentResult" style="display: none;">
+        <h2>Deployment Instructions</h2>
+        <div class="deployment-container">
+            <div id="deploymentInstructions" class="markdown-content"></div>
+            <button class="copy-btn" id="copyDeployment" title="Copy to clipboard">
+                <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+        </div>
+        <button class="download-btn" id="downloadDeployment">Download deployment.md</button>
     </div>
     
     <div class="result-container" id="backendResult" style="display: none;">
@@ -512,6 +610,16 @@
         // Animate elements on page load
         document.addEventListener('DOMContentLoaded', function() {
             animateTextByLetters('.animated-text');
+            
+            // Configure marked.js
+            marked.setOptions({
+                breaks: true,        // Add line breaks
+                gfm: true,           // Use GitHub Flavored Markdown
+                headerIds: true,     // Add IDs to headers
+                highlight: function(code, lang) {
+                    return code;     // Simple highlighting, can be enhanced
+                }
+            });
         });
         
         function animateTextByLetters(selector) {
@@ -562,6 +670,7 @@
             // Hide previous results
             document.getElementById('backendResult').style.display = 'none';
             document.getElementById('frontendResult').style.display = 'none';
+            document.getElementById('deploymentResult').style.display = 'none';
             
             try {
                 const response = await fetch('/generate', {
@@ -576,6 +685,17 @@
                 
                 // Hide loading indicator
                 document.getElementById('loadingIndicator').style.display = 'none';
+                
+                // Display deployment instructions with markdown rendering
+                if (data.deployment_instructions) {
+                    const deploymentElement = document.getElementById('deploymentInstructions');
+                    // Use marked.js to render markdown
+                    deploymentElement.innerHTML = marked.parse(data.deployment_instructions);
+                    
+                    const deploymentResult = document.getElementById('deploymentResult');
+                    deploymentResult.style.display = 'block';
+                    deploymentResult.classList.add('show');
+                }
                 
                 // Display backend code with animation
                 if (data.response) {
@@ -627,6 +747,17 @@
             downloadFile('index.html', code);
         });
         
+        // Handle deployment instructions download
+        document.getElementById('downloadDeployment').addEventListener('click', function() {
+            // Get the raw markdown (not the HTML rendered version)
+            // This is a common approach to get unprocessed deployment instructions
+            const originalDeploymentText = document.getElementById('deploymentInstructions')
+                .getAttribute('data-original-markdown') || 
+                document.getElementById('deploymentInstructions').textContent;
+            
+            downloadFile('deployment.md', originalDeploymentText);
+        });
+        
         // Copy to clipboard functionality
         document.getElementById('copyBackend').addEventListener('click', function() {
             copyToClipboard(document.getElementById('backendCode').textContent);
@@ -634,6 +765,15 @@
         
         document.getElementById('copyFrontend').addEventListener('click', function() {
             copyToClipboard(document.getElementById('frontendCode').textContent);
+        });
+        
+        document.getElementById('copyDeployment').addEventListener('click', function() {
+            // Get the raw markdown for copying (not the HTML rendered version)
+            const originalDeploymentText = document.getElementById('deploymentInstructions')
+                .getAttribute('data-original-markdown') || 
+                document.getElementById('deploymentInstructions').textContent;
+                
+            copyToClipboard(originalDeploymentText);
         });
         
         function copyToClipboard(text) {

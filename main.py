@@ -8,7 +8,6 @@ import os
 
 app = FastAPI()
 
-# Create static directory if it doesn't exist
 os.makedirs("static", exist_ok=True)
 
 app.add_middleware(
@@ -48,8 +47,6 @@ async def main(request: PromptRequest):
     backend_lines = backend_response.split("\n")
     backend_response_ = "\n".join(backend_lines[1:-1])
 
-    # Save backend code
-
     frontend_response = None
     if request.fullstack:
         frontend_response = generate_code(
@@ -57,26 +54,31 @@ async def main(request: PromptRequest):
         )
 
         backend_response = generate_code(
-            """Give me the code alone nothing else just code not text anything. Give me the entire code I just want to copy paste Connect the backend and frontend using static files give me only the python code as you are working 
-            on backend alone"""
+            """Give me the backend code alone nothing else just code not text anything. Give me the entire backend code alone I just want to copy paste Connect the backend and frontend using static files give me only the python code as you are working 
+            on backend alone and return the backend code alone"""
             + backend_response_,
             frontend_response,
         )
 
         with open("downloads/main.py", "w") as f:
+            backend_lines = backend_response.split("\n")
+            backend_response = "\n".join(backend_lines[1:-1])
             f.write(backend_response)
 
         with open("downloads/index.html", "w") as f:
             frontend_lines = frontend_response.split("\n")
             modified_text = "\n".join(frontend_lines[1:-1])
             f.write(modified_text)
-
-    print(backend_response)
-    print(frontend_response)
-    return {"response": backend_response, "frontend_response": modified_text}
+            
+        deployment_instructions = generate_code(
+            "Give me the deployment instructions for this code" + backend_response, 
+            "Give me the deployment instructions for this code" + modified_text
+        )
+            
+    return {"response": backend_response, "frontend_response": modified_text, "deployment_instructions": deployment_instructions}
 
 
 if __name__ == "__main__":
+    
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
